@@ -3,6 +3,7 @@ const router = express.Router()
 let teamIDs = require('../../teamIDs');
 const request = require('request');
 const path = require('path')
+let dreamTeam = require(`../../dreamTeam`)
 
 
 
@@ -26,14 +27,40 @@ router.get('/teams/:teamName',function(req,res){
     })
 })
 
-router.get('/playerStats/:player', function(req,res){
-    let player = req.params.player;
-    let playerNames = player.split(' ')
-    let firstName = playerNames[1]
-    let lastName = playerNames[0]
-    request(`https://nba-players.herokuapp.com/players-stats/${lastName}/${firstName}`,function(err,response){
-        res.send(response.body)
-    })
+
+router.put(`/team`, function(req,res){
+    let newTeam = req.body
+    teamIDs[newTeam.teamName] = newTeam.teamId;
+    res.send(teamIDs)
 })
+
+router.get('/dreamTeam',function(req,res){
+    request('http://data.nba.net/10s/prod/v1/2016/players.json',function(err,response){
+        let data = JSON.parse(response.body).league.standard;
+        let fivePlayers = []
+        for ( let i =0; i < 5; i++ ){
+            let randomNumber = Math.floor(Math.random() * data.length);
+            fivePlayers.push(data[randomNumber])
+        }
+        let dreamTeam = []
+        for ( let player of fivePlayers ) {
+            let p = {};
+            p.firstName = player.firstName;
+            p.lastName = player.lastName;
+            p.jersey = player.jersey;
+            p.pos = player.pos;
+            dreamTeam.push(p)
+        }
+        res.send(dreamTeam)
+    })
+
+})
+
+router.post(`/roster`, function(req,res){
+    let player = req.body;
+    dreamTeam.dreamTeam.push(player);
+    res.send(dreamTeam)
+})
+
 
 module.exports = router
